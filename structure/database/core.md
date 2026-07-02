@@ -1,5 +1,3 @@
-برای /structure/database/core.md:
-
 Database Core
 
 Core Principle
