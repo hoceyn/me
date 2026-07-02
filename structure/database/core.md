@@ -1,196 +1,243 @@
-Database Core
+# Database Core
 
-Core Principle
+## Philosophy
 
-Database design must prioritize correctness, performance, clarity, and long-term maintainability.
+The database is the foundation of the system.
 
-Both relational and non-relational databases are acceptable when they fit the data model and performance requirements.
+Every design decision must prioritize:
 
-The database choice must follow the access pattern, not personal preference.
+1. Data correctness
+2. Performance
+3. Long-term maintainability
+4. Readability
+5. Scalability
 
-Performance Priority
+The database technology must be selected based on the nature of the problem, not personal preference.
 
-Database structure must be designed around real read/write patterns.
+---
 
-Important reads must be fast.
+# Database Selection
 
-If normalized relational design creates slow critical reads, do not corrupt the source model.
+Both relational and non-relational databases are valid.
 
-Use a performance layer instead:
+Choose the database according to the access pattern, consistency requirements, scalability requirements, and business needs.
 
-* read models
-* shortcut tables
-* denormalized tables
-* materialized views
-* cache tables
-* indexes
-* search indexes
-* document projections
-* analytical databases
+Never force every problem into a single database technology.
 
-Relational Database
+Multiple database engines may coexist in one system if they provide a better overall architecture.
 
-Use relational databases when the system needs:
+---
 
-* strong consistency
-* clear relationships
-* transactions
-* financial records
-* orders
-* invoices
-* users
-* permissions
-* structured reporting
+# Relational Databases
 
-Tables must have clear responsibility.
+Prefer relational databases when the domain requires:
 
-Relationships must be explicit.
+- transactions
+- financial operations
+- relationships
+- referential integrity
+- reporting
+- consistency
+- business rules
 
-Naming must describe the business concept, not the technical shortcut.
+The schema should accurately model the business domain.
 
-Non-relational Database
+---
 
-Use non-relational databases when the system needs:
+# Non-relational Databases
 
-* flexible documents
-* metadata-heavy records
-* high-volume event data
-* logs
-* analytics
-* user behavior tracking
-* semi-structured business data
-* fast document-style access
+Prefer document databases when the domain contains:
 
-Document structure must still be intentional.
+- flexible metadata
+- dynamic structures
+- documents
+- logs
+- analytics
+- event storage
+- user-generated schemas
 
-Non-relational does not mean unstructured.
+Document databases must remain intentionally structured.
 
-Naming
+Flexible does not mean uncontrolled.
 
-All database names must be readable, explicit, and related to their real concept.
+---
+
+# Performance
+
+Performance is a first-class design goal.
+
+Critical read operations should always remain fast.
+
+Do not destroy a correct relational model simply to optimize reads.
+
+Instead, introduce dedicated optimization layers.
+
+Allowed optimization techniques include:
+
+- read models
+- shortcut tables
+- cache tables
+- denormalized projections
+- materialized views
+- search indexes
+- analytical databases
+- dedicated read databases
+
+The source model must remain logically correct.
+
+Optimization exists beside the source model, never instead of it.
+
+---
+
+# Naming
+
+Naming must always describe the business concept.
+
+Names must be explicit, readable, and predictable.
 
 This applies to:
 
-* databases
-* tables
-* collections
-* columns
-* indexes
-* foreign keys
-* pivot tables
-* JSON keys
-* enum values
+- databases
+- schemas
+- tables
+- collections
+- columns
+- indexes
+- constraints
+- foreign keys
+- JSON properties
 
-Avoid vague names:
+Avoid meaningless names such as:
 
-* data
-* item
-* value
-* temp
-* misc
-* info
-* type
-* status without context
+- data
+- item
+- value
+- temp
+- misc
+- info
+- obj
 
-Boolean and Status Fields
+---
 
-Boolean fields and status-like fields should start with _.
+# State Fields
+
+Boolean fields and state-related fields should begin with an underscore.
 
 Examples:
 
-* _active
-* _verified
-* _paid
-* _published
-* _deleted
-* _status
-* _payment_status
-* _delivery_status
-* _sync_status
+_active
+_enabled
+_verified
+_deleted
+_locked
+_paid
+_visible
+_status
+_payment_status
+_delivery_status
+_sync_status
 
-This convention makes state fields visually recognizable.
+State fields should be immediately recognizable.
 
-Date and Time
+---
 
-Date-time fields must use datetime type unless there is a clear technical reason to use another type.
+# Date & Time
 
-Preferred names:
+All date-time values should use the DATETIME type unless another type has a clear technical advantage.
 
-* created_at
-* updated_at
-* deleted_at
-* started_at
-* finished_at
-* expires_at
-* paid_at
-* published_at
+Preferred field names:
 
-Use date-only fields only when time is meaningless.
+created_at
+updated_at
+deleted_at
+published_at
+expires_at
+started_at
+finished_at
+paid_at
 
-Indexing
+Store date-only values only when time has no business meaning.
 
-Indexes must be designed intentionally based on query patterns.
+---
 
-Critical filters, joins, sorting fields, and lookup fields should be indexed.
+# Index Strategy
 
-Do not add indexes blindly.
+Indexes must be intentional.
 
-Every important query should have an explainable indexing strategy.
+Create indexes based on actual query patterns.
 
-Data Duplication
+Indexes should support:
 
-Data duplication is allowed when it improves performance or protects critical reads.
+- filtering
+- sorting
+- joins
+- unique lookups
+- high-frequency queries
 
-Duplication must be intentional and documented.
+Avoid unnecessary indexes.
 
-Duplicated data must have a clear source of truth.
+Every index should have a reason.
 
-Source of Truth
+---
 
-Every important data field must have one clear source of truth.
+# Data Duplication
 
-Derived data, cached data, and projected data must not replace the source model.
+Intentional duplication is acceptable when it significantly improves performance.
 
-They exist only to improve access speed or reporting.
+Duplicated data must:
 
-Query Safety
+- have one source of truth
+- be synchronized
+- be documented
 
-Avoid queries that can damage production performance.
+Never duplicate data without a defined synchronization strategy.
 
-Risky patterns:
+---
 
-* unbounded queries
-* missing pagination
-* large joins without indexes
-* filtering on non-indexed high-volume fields
-* sorting large datasets without strategy
-* loading unnecessary columns
-* repeated queries inside loops
+# Growth Strategy
 
-Data Growth
+The database must be designed with future growth in mind.
 
-Database design must consider future growth.
+Large datasets should have a clear scaling strategy.
 
-Large tables, logs, events, orders, messages, analytics, and tracking records must have a growth strategy.
+Possible approaches include:
 
-Allowed strategies:
+- partitioning
+- archiving
+- dedicated storage
+- read replicas
+- sharding (when justified)
+- retention policies
+- summary tables
 
-* partitioning
-* archiving
-* sharding when justified
-* separate storage
-* cold storage
-* summary tables
-* retention policies
+---
 
-Decision Rule
+# Query Design
 
-When choosing a database structure:
+Queries should minimize unnecessary work.
+
+Avoid:
+
+- SELECT *
+- unnecessary joins
+- N+1 queries
+- full table scans on high-volume tables
+- sorting without indexes
+- filtering on non-indexed fields
+- loading unused columns
+
+Every expensive query should have a measurable justification.
+
+---
+
+# Decision Rule
+
+When multiple database designs are technically valid:
 
 1. Preserve data correctness.
-2. Optimize critical reads and writes.
-3. Keep naming explicit and concept-based.
-4. Choose relational or non-relational based on access pattern.
-5. Use performance layers instead of corrupting the source model.
-6. Make state fields visually recognizable with _.
-7. Keep every derived structure tied to a clear source of truth.
+2. Preserve business meaning.
+3. Prefer the design with better long-term performance.
+4. Optimize using dedicated performance layers instead of weakening the source model.
+5. Keep naming explicit and business-oriented.
+6. Make state fields immediately recognizable using the underscore convention.
+7. Design for future growth from the beginning.
